@@ -1,10 +1,33 @@
 import { useState } from "react";
-import { Menu, X, Search, Bell, User } from "lucide-react";
+import { Menu, X, Search, Bell, User, LogOut } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, signOut } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    const { error } = await signOut();
+    if (error) {
+      toast({
+        title: "로그아웃 실패",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "로그아웃 완료",
+        description: "안전하게 로그아웃되었습니다.",
+      });
+      navigate("/");
+    }
+  };
 
   const menuItems = [
     { name: "경기 분석방", href: "#analysis" },
@@ -17,10 +40,10 @@ const Header = () => {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between px-4">
         {/* 로고 */}
-        <div className="flex items-center space-x-2">
+        <Link to="/" className="flex items-center space-x-2">
           <h1 className="text-2xl font-bold text-gradient">트윈스하우스</h1>
           <span className="text-sm text-muted-foreground">LG TWINS</span>
-        </div>
+        </Link>
 
         {/* 데스크톱 네비게이션 */}
         <nav className="hidden md:flex items-center space-x-6">
@@ -50,9 +73,22 @@ const Header = () => {
             </Button>
           </div>
 
-          <Button variant="ghost" size="icon">
-            <User className="h-4 w-4" />
-          </Button>
+          {user ? (
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-muted-foreground hidden sm:inline">
+                {user.email}
+              </span>
+              <Button variant="ghost" size="icon" onClick={handleSignOut}>
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <Link to="/auth">
+              <Button variant="ghost" size="icon">
+                <User className="h-4 w-4" />
+              </Button>
+            </Link>
+          )}
 
           {/* 모바일 메뉴 버튼 */}
           <Button
